@@ -123,6 +123,10 @@ app.post('/professor', (req, res) => {
   stmt.finalize();
 });
 
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
+});
+
 process.on('SIGINT', () => {
   db.close((err) => {
     if (err) {
