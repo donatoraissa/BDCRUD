@@ -59,7 +59,7 @@ db.serialize(() => {
 
   db.run(`
     CREATE TABLE IF NOT EXISTS Atletas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       cpf VARCHAR(14) UNIQUE NOT NULL,
       nome VARCHAR(100) NOT NULL,
       data_nascimento DATE NOT NULL,
@@ -83,59 +83,77 @@ db.serialize(() => {
       console.log('Tabela "Atletas" criada ou já existe.');
     }
   });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Progressoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_atleta INTEGER,
+      data_graduacao DATE NOT NULL,
+      nova_faixa TEXT NOT NULL,
+      observacao TEXT,
+      FOREIGN KEY (id_atleta) REFERENCES Atletas(id)
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Erro ao criar a tabela Progressoes:', err);
+    } else {
+      console.log('Tabela "Progressoes" criada ou já existe.');
+    }
+  });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Competicoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      data TEXT NOT NULL
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Erro ao criar a tabela Competicoes:', err);
+    } else {
+      console.log('Tabela "Competicoes" criada ou já existe.');
+    }
+  });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Participacoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_atleta TEXT NOT NULL, 
+      id_competicao INTEGER NOT NULL,
+      id_categoria INTEGER,
+      resultado TEXT,
+      matricula TEXT,
+      FOREIGN KEY (id_atleta) REFERENCES Atletas(cpf) ON DELETE CASCADE,
+      FOREIGN KEY (id_competicao) REFERENCES Competicoes(id) ON DELETE CASCADE,
+      FOREIGN KEY (id_categoria) REFERENCES Categorias(id) ON DELETE SET NULL
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Erro ao criar a tabela Participacoes:', err);
+    } else {
+      console.log('Tabela "Participacoes" criada ou já existe.');
+    }
+  });
+
+  // Adicionando a tabela de Ranking
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Ranking (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_atleta INTEGER NOT NULL,
+      total_medalhas INTEGER DEFAULT 0,
+      total_participacoes INTEGER DEFAULT 0,
+      FOREIGN KEY (id_atleta) REFERENCES Atletas(id) ON DELETE CASCADE
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Erro ao criar a tabela Ranking:', err);
+    } else {
+      console.log('Tabela "Ranking" criada ou já existe.');
+    }
+  });
 });
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS Progressoes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_atleta INTEGER,
-    data_graduacao DATE NOT NULL,
-    nova_faixa TEXT NOT NULL,
-    observacao TEXT,
-    FOREIGN KEY (id_atleta) REFERENCES Atletas(id)
-  )
-`, (err) => {
-  if (err) {
-    console.error('Erro ao criar a tabela Progressoes:', err);
-  } else {
-    console.log('Tabela "Progressoes" criada ou já existe.');
-  }
-});
 
-
-  // db.run(
-  //   `CREATE TABLE Competicoes (
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //     atleta_id INT NOT NULL,
-  //     nome_competicao VARCHAR(100) NOT NULL,
-  //     data DATE NOT NULL,
-  //     categoria VARCHAR(50) NOT NULL,
-  //     resultado VARCHAR(20),
-  //     matricula_competicao INT UNIQUE,
-  //     FOREIGN KEY (atleta_id) REFERENCES Atletas(id)
-  //   );`, (err) => {
-  //   if (err) {
-  //     console.error('Erro ao criar a tabela:', err);
-  //   } else {
-  //     console.log('Tabela "atletas" criada ou já existe.');
-  //   }
-  // });
-
-  // db.run(
-  //   `CREATE TABLE Ranking (
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //     atleta_id INT NOT NULL,
-  //     graduacao VARCHAR(50) NOT NULL,
-  //     total_medalhas VARCHAR(20),
-  //     participacoes INT NOT NULL,
-  //     FOREIGN KEY (atleta_id) REFERENCES Atletas(id)
-  //   );`, (err) => {
-  //   if (err) {
-  //     console.error('Erro ao criar a tabela:', err);
-  //   } else {
-  //     console.log('Tabela "atletas" criada ou já existe.');
-  //   }
-  // });
 
 
 app.post('/professor', (req, res) => {
