@@ -154,8 +154,6 @@ db.serialize(() => {
 });
 
 
-
-
 app.post('/professor', (req, res) => {
   const { cpf, nome, telefone, salario } = req.body;
   
@@ -719,6 +717,249 @@ app.delete('/progressoes/:id', (req, res) => {
   stmt.finalize();
 });
 
+// Criar um Ranking
+app.post('/ranking', (req, res) => {
+  const { nome_ranking, descricao } = req.body;
+
+  if (!nome_ranking || !descricao) {
+    return res.status(400).json({ error: 'Os campos nome_ranking e descricao são obrigatórios!' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO Rankings (nome_ranking, descricao)
+    VALUES (?, ?)
+  `);
+
+  stmt.run(nome_ranking, descricao, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao cadastrar ranking.' });
+    }
+    res.status(201).json({ message: 'Ranking cadastrado com sucesso!', id: this.lastID });
+  });
+
+  stmt.finalize();
+});
+
+// Buscar um Ranking pelo ID
+app.get('/ranking/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.get(`SELECT * FROM Rankings WHERE id = ?`, [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar ranking.' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: 'Ranking não encontrado.' });
+    }
+
+    res.status(200).json(row);
+  });
+});
+
+// Listar todos os Rankings
+app.get('/rankings', (req, res) => {
+  db.all('SELECT * FROM Rankings', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar rankings.' });
+    }
+
+    res.status(200).json(rows);
+  });
+});
+
+// Atualizar um Ranking
+app.put('/ranking/:id', (req, res) => {
+  const { id } = req.params;
+  const { nome_ranking, descricao } = req.body;
+
+  if (!nome_ranking || !descricao) {
+    return res.status(400).json({ error: 'Os campos nome_ranking e descricao são obrigatórios!' });
+  }
+
+  const stmt = db.prepare(`
+    UPDATE Rankings SET nome_ranking = ?, descricao = ? WHERE id = ?
+  `);
+
+  stmt.run(nome_ranking, descricao, id, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao atualizar ranking.' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Ranking não encontrado.' });
+    }
+
+    res.json({ message: 'Ranking atualizado com sucesso!' });
+  });
+
+  stmt.finalize();
+});
+
+// Excluir um Ranking
+app.delete('/ranking/:id', (req, res) => {
+  const { id } = req.params;
+
+  const stmt = db.prepare(`DELETE FROM Rankings WHERE id = ?`);
+
+  stmt.run(id, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao excluir o ranking.' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Ranking não encontrado.' });
+    }
+
+    res.status(200).json({ message: 'Ranking excluído com sucesso!' });
+  });
+
+  stmt.finalize();
+});
+
+// Criar uma Competição
+app.post('/competicao', (req, res) => {
+  const { nome, data, id_categoria, id_professor } = req.body;
+
+  if (!nome || !data || !id_categoria || !id_professor) {
+    return res.status(400).json({ error: 'Os campos nome, data, id_categoria e id_professor são obrigatórios!' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO Competicoes (nome, data, id_categoria, id_professor)
+    VALUES (?, ?, ?, ?)
+  `);
+
+  stmt.run(nome, data, id_categoria, id_professor, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao cadastrar competição.' });
+    }
+    res.status(201).json({ message: 'Competição cadastrada com sucesso!', id: this.lastID });
+  });
+
+  stmt.finalize();
+});
+
+// Buscar uma Competição pelo ID
+app.get('/competicao/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.get(`SELECT * FROM Competicoes WHERE id = ?`, [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar competição.' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: 'Competição não encontrada.' });
+    }
+
+    res.status(200).json(row);
+  });
+});
+
+// Listar todas as Competições
+app.get('/competicoes', (req, res) => {
+  db.all('SELECT * FROM Competicoes', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar competições.' });
+    }
+
+    res.status(200).json(rows);
+  });
+});
+
+// Excluir uma Competição
+app.delete('/competicao/:id', (req, res) => {
+  const { id } = req.params;
+
+  const stmt = db.prepare(`DELETE FROM Competicoes WHERE id = ?`);
+
+  stmt.run(id, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao excluir a competição.' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Competição não encontrada.' });
+    }
+
+    res.status(200).json({ message: 'Competição excluída com sucesso!' });
+  });
+
+  stmt.finalize();
+});
+
+// Criar uma Participação
+app.post('/participacao', (req, res) => {
+  const { id_atleta, id_competicao, colocacao, observacao } = req.body;
+
+  if (!id_atleta || !id_competicao || !colocacao) {
+    return res.status(400).json({ error: 'Os campos id_atleta, id_competicao e colocacao são obrigatórios!' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO Participacoes (id_atleta, id_competicao, colocacao, observacao)
+    VALUES (?, ?, ?, ?)
+  `);
+
+  stmt.run(id_atleta, id_competicao, colocacao, observacao || null, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao cadastrar participação.' });
+    }
+    res.status(201).json({ message: 'Participação cadastrada com sucesso!', id: this.lastID });
+  });
+
+  stmt.finalize();
+});
+
+// Buscar uma Participação pelo ID
+app.get('/participacao/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.get(`SELECT * FROM Participacoes WHERE id = ?`, [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar participação.' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: 'Participação não encontrada.' });
+    }
+
+    res.status(200).json(row);
+  });
+});
+
+// Listar todas as Participações
+app.get('/participacoes', (req, res) => {
+  db.all('SELECT * FROM Participacoes', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao buscar participações.' });
+    }
+
+    res.status(200).json(rows);
+  });
+});
+
+// Excluir uma Participação
+app.delete('/participacao/:id', (req, res) => {
+  const { id } = req.params;
+
+  const stmt = db.prepare(`DELETE FROM Participacoes WHERE id = ?`);
+
+  stmt.run(id, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao excluir a participação.' });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Participação não encontrada.' });
+    }
+
+    res.status(200).json({ message: 'Participação excluída com sucesso!' });
+  });
+
+  stmt.finalize();
+});
 
 
 app.listen(port, () => {
@@ -734,4 +975,6 @@ process.on('SIGINT', () => {
     }
     process.exit(0);
   });
+
+
 });
