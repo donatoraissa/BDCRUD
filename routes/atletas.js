@@ -45,7 +45,20 @@ router.post('/atletas', (req, res) => {
       res.status(200).json(rows);
     });
   });
-  
+
+  router.get('/atletas/:id', (req, res) => {
+    const { id } = req.params;
+    
+    db.get('SELECT * FROM Atletas WHERE id = ?', [id], (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: 'Erro ao buscar atleta', details: err.message });
+      }
+      if (!row) {
+        return res.status(404).json({ error: 'Atleta não encontrado' });
+      }
+      res.json(row);
+    });
+  });  
 
   router.delete('/atletas/:id', (req, res) => {
     const { id } = req.params;
